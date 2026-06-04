@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Architecture for ML Engineers — A Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e0c;
+  --bg-soft: #16161300;
+  --paper: #f4ede0;
+  --paper-soft: #ebe2d0;
+  --ink: #1a1a17;
+  --ink-soft: #5c554a;
+  --accent: #d94a1f;
+  --accent-hot: #f5a623;
+  --cold: #2d6cdf;
+  --teal: #1a8870;
+  --line: rgba(26,26,23,0.15);
+  --line-strong: rgba(26,26,23,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.65;
+  font-size: 16px;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(217,74,31,0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(45,108,223,0.04) 0%, transparent 40%);
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+}
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  padding: 60px 8vw 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+.hero-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8vh;
+}
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(48px, 9vw, 140px);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  margin-bottom: 32px;
+  font-variation-settings: "opsz" 144;
+}
+.hero h1 em {
+  font-style: italic;
+  font-weight: 900;
+  color: var(--accent);
+}
+.hero h1 .underline {
+  position: relative;
+  display: inline-block;
+}
+.hero h1 .underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0.08em;
+  left: 0;
+  right: 0;
+  height: 0.08em;
+  background: var(--accent);
+  opacity: 0.4;
+}
+.hero-sub {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 400;
+  font-style: italic;
+  max-width: 700px;
+  color: var(--ink-soft);
+  margin-bottom: 50px;
+}
+.hero-toc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  max-width: 900px;
+}
+.hero-toc a {
+  background: var(--paper);
+  padding: 20px 24px;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: background 0.3s;
+}
+.hero-toc a:hover { background: var(--paper-soft); }
+.hero-toc a .num {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  font-weight: 700;
+}
+.hero-toc a .label {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* === SECTIONS === */
+section {
+  padding: 100px 8vw;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: block;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  margin-bottom: 24px;
+  max-width: 900px;
+}
+.section-title em { font-style: italic; font-weight: 700; color: var(--accent); }
+.section-lede {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  font-style: italic;
+  max-width: 720px;
+  margin-bottom: 60px;
+  border-left: 2px solid var(--accent);
+  padding-left: 24px;
+}
+.prose {
+  max-width: 720px;
+  font-size: 17px;
+  line-height: 1.7;
+}
+.prose p { margin-bottom: 1.2em; }
+.prose strong { font-weight: 600; color: var(--ink); }
+.prose em { font-style: italic; }
+.prose .key {
+  background: linear-gradient(180deg, transparent 60%, rgba(245,166,35,0.35) 60%);
+  padding: 0 2px;
+  font-weight: 500;
+}
+.prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  background: var(--paper-soft);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+.prose h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 50px 0 16px;
+}
+.prose h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 32px 0 12px;
+}
+
+/* Pull quote */
+.pullquote {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  max-width: 800px;
+  margin: 80px auto;
+  text-align: center;
+  position: relative;
+  color: var(--ink);
+}
+.pullquote::before {
+  content: '“';
+  font-size: 200px;
+  position: absolute;
+  top: -40px;
+  left: -30px;
+  color: var(--accent);
+  opacity: 0.15;
+  font-family: 'Fraunces', serif;
+  line-height: 1;
+}
+.pullquote .attr {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  margin-top: 24px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* === THREE PILLARS === */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin: 40px 0;
+}
+@media (max-width: 800px) {
+  .pillars { grid-template-columns: 1fr; }
+}
+.pillar {
+  background: var(--paper-soft);
+  padding: 32px;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.pillar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: var(--c);
+}
+.pillar:nth-child(1) { --c: var(--accent); }
+.pillar:nth-child(2) { --c: var(--teal); }
+.pillar:nth-child(3) { --c: var(--cold); }
+.pillar .ptag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--c);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.pillar h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+.pillar p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+.pillar .ml-tag {
+  margin-top: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.04);
+  display: inline-block;
+  border-radius: 2px;
+}
+
+/* === MEMORY PYRAMID === */
+.pyramid {
+  margin: 50px 0;
+  max-width: 800px;
+}
+.tier {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  margin-bottom: -1px;
+  background: var(--paper);
+  position: relative;
+  transition: transform 0.2s;
+}
+.tier:hover { transform: translateX(8px); background: var(--paper-soft); }
+.tier .tnum {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent);
+  line-height: 1;
+}
+.tier .tbody h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.tier .tbody p {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.tier .tspec {
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+.tier .tspec .big {
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 700;
+  display: block;
+}
+.tier[data-speed="1"] { width: 30%; }
+.tier[data-speed="2"] { width: 50%; }
+.tier[data-speed="3"] { width: 75%; }
+.tier[data-speed="4"] { width: 100%; }
+@media (max-width: 700px) {
+  .tier[data-speed] { width: 100%; }
+  .tier { grid-template-columns: 60px 1fr; gap: 12px; }
+  .tier .tspec { grid-column: 1 / -1; text-align: left; padding-top: 8px; border-top: 1px dashed var(--line); }
+}
+
+/* === LATENCY VISUALIZATION === */
+.latency {
+  margin: 60px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.latency-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 120px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--line);
+  gap: 16px;
+}
+.latency-row .ll { font-weight: 500; }
+.latency-row .bar {
+  height: 8px;
+  background: var(--accent);
+  border-radius: 1px;
+  position: relative;
+}
+.latency-row .lt {
+  text-align: right;
+  color: var(--ink-soft);
+}
+@media (max-width: 700px) {
+  .latency-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* === CODE BLOCKS === */
+pre {
+  background: var(--ink);
+  color: #e8d5b7;
+  padding: 24px 28px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 24px 0;
+  border-left: 4px solid var(--accent);
+  max-width: 720px;
+}
+pre .c { color: #8b8076; font-style: italic; }
+pre .k { color: #f5a623; }
+pre .s { color: #1a8870; }
+pre .n { color: #d94a1f; }
+pre .v { color: #a8c5e8; }
+
+/* === COMPARISON TABLE === */
+.compare {
+  margin: 40px 0;
+  border: 1px solid var(--ink);
+  max-width: 720px;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+}
+.compare-row:last-child { border-bottom: none; }
+.compare-row.head {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.compare-cell {
+  padding: 16px 20px;
+  font-size: 14px;
+}
+.compare-cell:first-child {
+  border-right: 1px solid var(--line);
+  background: rgba(217,74,31,0.04);
+}
+.compare-row.head .compare-cell:first-child { background: var(--ink); border-right: 1px solid #444; }
+
+/* === DIAGRAM CONTAINER === */
+.diagram {
+  margin: 50px 0;
+  padding: 40px 20px;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  text-align: center;
+  position: relative;
+}
+.diagram-cap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 24px;
+}
+.diagram svg { max-width: 100%; height: auto; }
+
+/* === GIL ILLUSTRATION === */
+.gil-vis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+.gil-side {
+  text-align: center;
+  flex: 1;
+  min-width: 260px;
+}
+.gil-side h4 {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.cores {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.core {
+  aspect-ratio: 1;
+  background: var(--paper-soft);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  position: relative;
+}
+.core.busy {
+  background: var(--accent);
+  color: var(--paper);
+  border-color: var(--accent);
+}
+.core.idle {
+  opacity: 0.4;
+}
+.gil-cap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.05em;
+}
+
+/* === CHECKLIST === */
+.checklist {
+  margin: 40px 0;
+  max-width: 720px;
+}
+.check-item {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: start;
+}
+.check-item .cnum {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent);
+  line-height: 1;
+}
+.check-item h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.check-item p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+/* === FOOTER === */
+footer {
+  padding: 80px 8vw 60px;
+  background: var(--ink);
+  color: var(--paper);
+}
+footer h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(32px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  line-height: 1;
+}
+footer h2 em { font-style: italic; color: var(--accent-hot); }
+footer p {
+  max-width: 600px;
+  color: rgba(244,237,224,0.6);
+  font-size: 15px;
+  line-height: 1.6;
+}
+footer .stamp {
+  margin-top: 60px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(244,237,224,0.4);
+  padding-top: 30px;
+  border-top: 1px solid rgba(244,237,224,0.15);
+}
+
+/* Drop cap */
+.drop-cap::first-letter {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 5em;
+  float: left;
+  line-height: 0.85;
+  padding: 8px 12px 0 0;
+  color: var(--accent);
+}
+
+/* Side note */
+.aside {
+  border-left: 3px solid var(--accent);
+  padding: 16px 20px;
+  margin: 24px 0;
+  background: rgba(217,74,31,0.05);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-soft);
+  max-width: 720px;
+}
+.aside strong { font-style: normal; color: var(--ink); }
+
+/* Animate hero on load */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero h1, .hero-sub, .hero-toc, .hero-meta {
+  animation: slideUp 0.8s ease forwards;
+}
+.hero-meta { animation-delay: 0s; }
+.hero h1 { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
+.hero-sub { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+.hero-toc { animation-delay: 0.5s; opacity: 0; animation-fill-mode: forwards; }
+
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-meta">
+    <span>A field guide · v1.0</span>
+    <span>for ML engineers</span>
+    <span>est. 2026</span>
+  </div>
+  <h1>The <em>machine</em><br>beneath<br>your <span class="underline">tensors</span>.</h1>
+  <p class="hero-sub">Everything you train on PyTorch lives somewhere in physical hardware. This is a tour of that hardware — written for someone who already knows what a gradient is, but has never thought about a cache line.</p>
+  <nav class="hero-toc">
+    <a href="#one"><span class="num">§ 01</span><span class="label">Three pieces</span></a>
+    <a href="#two"><span class="num">§ 02</span><span class="label">The compute side</span></a>
+    <a href="#three"><span class="num">§ 03</span><span class="label">The memory pyramid</span></a>
+    <a href="#four"><span class="num">§ 04</span><span class="label">Buses & latency</span></a>
+    <a href="#five"><span class="num">§ 05</span><span class="label">Python's penalties</span></a>
+    <a href="#six"><span class="num">§ 06</span><span class="label">Performance playbook</span></a>
+  </nav>
+</header>
+
+<!-- SECTION 01 -->
+<section id="one">
+  <span class="section-num">§ 01 · Foundations</span>
+  <h1 class="section-title">A computer is <em>three things</em><br>talking to each other.</h1>
+  <p class="section-lede">Strip away the marketing, the operating systems, the package managers — and a computer is a profoundly simple idea.</p>
+
+  <div class="prose drop-cap">
+    <p>Every machine you've ever programmed reduces to the same three components: <span class="key">a thing that does math</span>, <span class="key">a thing that stores numbers</span>, and <span class="key">wires that move numbers between them</span>. That's the entire abstraction. The CPU computes. The memory holds bits. The bus shuttles them around. Add a GPU and an SSD and a network card, and you have not added new categories — you have added new instances of the same three things.</p>
+    <p>For an ML engineer this is recognisable: when training feels slow you instinctively ask <em>"am I compute-bound or memory-bound?"</em> — and the answer always lives in this triangle. Either the math is the bottleneck (compute) or the data movement is (memory and buses). Almost nothing else can be slow.</p>
+  </div>
+
+  <div class="pillars">
+    <div class="pillar">
+      <div class="ptag">PART 01</div>
+      <h3>Computing units</h3>
+      <p>Take bits in, do arithmetic, push bits out. CPUs are general; GPUs are massively parallel. Measured by clock speed (cycles/sec) and IPC (instructions/cycle).</p>
+      <div class="ml-tag">your GPU lives here</div>
+    </div>
+    <div class="pillar">
+      <div class="ptag">PART 02</div>
+      <h3>Memory units</h3>
+      <p>Hold the bits between operations. Trade-off is brutal and universal: faster memory holds less, larger memory is slower.</p>
+      <div class="ml-tag">VRAM, RAM, your dataset</div>
+    </div>
+    <div class="pillar">
+      <div class="ptag">PART 03</div>
+      <h3>Communication</h3>
+      <p>Buses connect the others. The frontside bus is fast. The PCIe bus to your GPU is slower. The network is slowest by orders of magnitude.</p>
+      <div class="ml-tag">the .to(device) cost</div>
+    </div>
+  </div>
+
+  <div class="pullquote">
+    The bottleneck is almost never the math. It's almost always the moving.
+    <span class="attr">— a hard-won industry truth</span>
+  </div>
+</section>
+
+<!-- SECTION 02 -->
+<section id="two">
+  <span class="section-num">§ 02 · Compute</span>
+  <h1 class="section-title">The CPU has been <em>stuck</em><br>for twenty years.</h1>
+  <p class="section-lede">Clock speeds peaked around 2005. Since then, "faster" has meant something completely different — and understanding what changed explains most of modern software performance.</p>
+
+  <div class="prose">
+    <p>A CPU's speed used to be a single number: <strong>clock speed</strong>, the number of cycles per second. Cycle faster, compute faster. Simple. From the 80s to the early 2000s clock speeds doubled roughly every two years, and code got faster for free.</p>
+    <p>Then physics caught up. Making transistors smaller and switching them faster started cooking the chip. Around the 4 GHz mark, the industry hit a thermal wall. Clock speeds <em>stopped going up</em>. You can still buy a 5 GHz consumer chip in 2026 — but you could buy a 3.8 GHz Pentium 4 in 2004. That's twenty years of stagnation in the headline number.</p>
+
+    <h3>So how do modern CPUs get faster?</h3>
+    <p>Three tricks, all of which matter to your code:</p>
+
+    <h4>01. Instructions per cycle (IPC)</h4>
+    <p>A modern CPU does more <em>per cycle</em> — pipelining, branch prediction, speculative execution. Same clock speed, more work. This is invisible to your code but real.</p>
+
+    <h4>02. SIMD — single instruction, multiple data</h4>
+    <p>The CPU has special instructions that operate on <strong>8 or 16 numbers at once</strong>. Add eight floats in one instruction, multiply eight pairs in one instruction. This is <span class="key">vectorization</span>, and it is the single most important hardware feature for numerical computing. <code>numpy</code> exists because of this. <code>torch</code> exists because of this. A Python <code>for</code> loop cannot use SIMD. A vectorized NumPy operation can.</p>
+
+    <h4>03. Multi-core</h4>
+    <p>Instead of one fast core, ship eight medium ones. Your laptop has 8–16 cores; a server has 64–128. This is great <em>if</em> your problem can be split across them. Most can't, fully.</p>
+
+    <div class="aside">
+      <strong>Amdahl's Law, in plain English:</strong> if 10% of your program runs serially (can't be parallelized), the maximum speedup from infinite cores is 10×. Not 100×, not 1000× — 10×. The serial slice is the ceiling. This is why a DataLoader with 16 workers doesn't make training 16× faster.
+    </div>
+
+    <h3>Why GPUs feel like magic</h3>
+    <p>A CPU has 8–16 powerful cores. A GPU has <strong>thousands of weak ones</strong>. For matrix multiplication — which is parallelizable to an almost absurd degree — the GPU wins by orders of magnitude. But there's a catch: the GPU sits on the PCIe bus, far from main memory. Getting data <em>to</em> the GPU is slow. This is why you batch, why you keep tensors on-device, why <code>.cpu()</code> in a hot loop is a known footgun.</p>
+  </div>
+</section>
+
+<!-- SECTION 03 -->
+<section id="three">
+  <span class="section-num">§ 03 · Memory</span>
+  <h1 class="section-title">Fast and big <em>are enemies</em>.</h1>
+  <p class="section-lede">No memory technology gives you both speed and capacity. So computers stack memory in tiers and gamble that the next byte you need is already in a fast tier.</p>
+
+  <div class="prose">
+    <p>The trade-off is physical. Fast memory is built from transistors arranged for speed (SRAM) — expensive per bit, generates heat, lives on the CPU die itself. Cheap memory is built differently (DRAM, NAND flash, spinning rust) — more bits per dollar, but the read takes longer. You cannot have both.</p>
+    <p>The clever solution: <span class="key">a hierarchy</span>. Tiny amount of ultra-fast memory closest to the CPU. A bit more, slightly slower, next out. A lot more, much slower, further out. The CPU automatically <em>copies hot data inward</em>, betting that you'll use the same bytes again soon. When that bet pays off — a <strong>cache hit</strong> — your code flies. When it doesn't — a <strong>cache miss</strong> — you wait.</p>
+  </div>
+
+  <div class="pyramid">
+    <div class="tier" data-speed="1">
+      <div class="tnum">01</div>
+      <div class="tbody">
+        <h4>CPU registers & L1 cache</h4>
+        <p>Lives on the CPU die itself. So fast it's basically free.</p>
+      </div>
+      <div class="tspec"><span class="big">~1 ns</span>kilobytes</div>
+    </div>
+    <div class="tier" data-speed="2">
+      <div class="tnum">02</div>
+      <div class="tbody">
+        <h4>L2 / L3 cache</h4>
+        <p>Still on the CPU. Shared between cores at the L3 level.</p>
+      </div>
+      <div class="tspec"><span class="big">~10 ns</span>megabytes</div>
+    </div>
+    <div class="tier" data-speed="3">
+      <div class="tnum">03</div>
+      <div class="tbody">
+        <h4>Main memory (RAM)</h4>
+        <p>Off-chip. Where your Python objects, tensors, and program code live.</p>
+      </div>
+      <div class="tspec"><span class="big">~100 ns</span>gigabytes</div>
+    </div>
+    <div class="tier" data-speed="4">
+      <div class="tnum">04</div>
+      <div class="tbody">
+        <h4>SSD storage</h4>
+        <p>Persistent. Where your dataset and model checkpoints live.</p>
+      </div>
+      <div class="tspec"><span class="big">~100 μs</span>terabytes</div>
+    </div>
+    <div class="tier" data-speed="4">
+      <div class="tnum">05</div>
+      <div class="tbody">
+        <h4>HDD / network storage</h4>
+        <p>S3 buckets, NFS mounts, spinning disks. Cheapest per byte, agonizingly slow per access.</p>
+      </div>
+      <div class="tspec"><span class="big">~10 ms</span>~unlimited</div>
+    </div>
+  </div>
+
+  <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); text-align: center; letter-spacing: 0.15em; margin: -20px 0 40px;">↑ width represents access time — bigger = slower</p>
+
+  <div class="prose">
+    <h3>The numbers, scaled to human time</h3>
+    <p>The latency gaps are staggering. Programmers can't really feel them at nanosecond scale, so here's the same hierarchy scaled up: if an L1 cache access took <strong>one second</strong>...</p>
+  </div>
+
+  <div class="latency">
+    <div class="latency-row">
+      <span class="ll">L1 cache</span>
+      <div class="bar" style="width: 0.5%;"></div>
+      <span class="lt">1 second</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">L2 cache</span>
+      <div class="bar" style="width: 1.5%;"></div>
+      <span class="lt">~3 seconds</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">L3 cache</span>
+      <div class="bar" style="width: 6%;"></div>
+      <span class="lt">~12 seconds</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">RAM</span>
+      <div class="bar" style="width: 50%;"></div>
+      <span class="lt">~100 seconds</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">SSD read</span>
+      <div class="bar" style="width: 90%;"></div>
+      <span class="lt">~28 hours</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">Network (datacenter)</span>
+      <div class="bar" style="width: 95%;"></div>
+      <span class="lt">~6 days</span>
+    </div>
+    <div class="latency-row">
+      <span class="ll">Disk seek (HDD)</span>
+      <div class="bar" style="width: 100%;"></div>
+      <span class="lt">~4 months</span>
+    </div>
+  </div>
+
+  <div class="pullquote">
+    A cache miss to RAM is 100× slower. A disk access is 100,000× slower. Optimize for locality, or accept the tax.
+  </div>
+
+  <div class="prose">
+    <h3>Sequential vs random access</h3>
+    <p>Here's the second crucial property: <span class="key">memory is faster when you read it in order</span>. Reading 1 MB sequentially is dramatically faster than reading 1 MB scattered across the address space. This is why a NumPy array crushes a Python list of numbers — the array is one contiguous slab of bytes, the list is a thousand pointers to a thousand integer objects scattered all over RAM.</p>
+    <p>The CPU prefetches. When you read byte N, it speculatively grabs N+1, N+2, ... N+64 (a "cache line") on the assumption you'll want them next. If your data is laid out sequentially, this works perfectly. If you're hopping around, the prefetcher is wrong every time, and you eat the full RAM latency on every access.</p>
+
+    <h4>What this means for your code</h4>
+    <pre><span class="c"># A Python list of a million ints</span>
+data = [i for i in range(1_000_000)]
+<span class="c"># 1M pointers, scattered. Every sum() walks the heap.</span>
+<span class="c"># Each int is a separate PyObject with refcount, type, value.</span>
+
+<span class="c"># A NumPy array of the same numbers</span>
+data = np.arange(1_000_000)
+<span class="c"># One contiguous 8MB block. The CPU prefetches perfectly.</span>
+<span class="c"># Sequential SIMD math at full memory bandwidth.</span>
+
+<span class="c"># Identical result. ~100x speed difference.</span></pre>
+  </div>
+</section>
+
+<!-- SECTION 04 -->
+<section id="four">
+  <span class="section-num">§ 04 · Wires</span>
+  <h1 class="section-title">Everything is connected<br>by a <em>bus</em>.</h1>
+  <p class="section-lede">A bus is just a bundle of wires. Its speed is a function of how many wires (width) and how fast they switch (frequency). Every connection in your machine is a bus, and they vary wildly.</p>
+
+  <div class="prose">
+    <p>Here's a partial map of the buses inside a typical workstation, in rough order of speed:</p>
+  </div>
+
+  <div class="compare">
+    <div class="compare-row head">
+      <div class="compare-cell">Connection</div>
+      <div class="compare-cell">Approximate bandwidth</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>CPU ↔ L1 cache</strong></div>
+      <div class="compare-cell">1+ TB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>CPU ↔ RAM (frontside / mem controller)</strong></div>
+      <div class="compare-cell">50–100 GB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>CPU ↔ GPU (PCIe 5.0 x16)</strong></div>
+      <div class="compare-cell">~63 GB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>GPU ↔ VRAM (HBM3)</strong></div>
+      <div class="compare-cell">2–3 TB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>NVMe SSD ↔ CPU</strong></div>
+      <div class="compare-cell">~7 GB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>Datacenter network</strong></div>
+      <div class="compare-cell">10–100 Gb/s ≈ 1–12 GB/s</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-cell"><strong>Home internet</strong></div>
+      <div class="compare-cell">~0.1 GB/s</div>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>Notice something: the <strong>GPU's own memory is faster than the CPU's</strong>, but the path between CPU and GPU is the narrow part. This is the entire ML systems story. You don't move data between CPU and GPU in a training loop. You move it once at startup, then keep it on-device and feed it the same way every batch. Crossing PCIe is the single most expensive thing your code can do, per byte.</p>
+  </div>
+</section>
+
+<!-- SECTION 05 -->
+<section id="five">
+  <span class="section-num">§ 05 · Python</span>
+  <h1 class="section-title">Python pays <em>two taxes</em><br>that compiled languages don't.</h1>
+  <p class="section-lede">Python is wonderful for development speed and devastating for raw performance. Understanding exactly why turns the language from an obstacle into a tool you can work around.</p>
+
+  <div class="prose">
+    <h3>Tax #1: Everything is an object</h3>
+    <p>In C, an <code>int</code> is 8 bytes. Just the number. In Python, an <code>int</code> is a <strong>PyObject</strong> — about 28 bytes — with a type pointer, a reference count, and the value. A list of integers in Python isn't a contiguous block of integers. It's a contiguous block of <em>pointers</em>, each pointing to a separately allocated integer object somewhere in the heap.</p>
+    <p>This destroys cache locality. When you iterate through a Python list of a million ints, every access is a potential cache miss because the actual integer values are scattered all over memory. Your CPU's beautiful prefetcher is useless.</p>
+
+    <div class="aside">
+      This is the entire reason <strong>NumPy, PyTorch, and JAX exist</strong>. They side-step Python's object model by storing raw bytes in C-managed arrays. When you call <code>tensor.sum()</code>, Python hands control to a C function that operates on contiguous memory using SIMD instructions. Python is just orchestrating; the work happens in a sane memory layout.
+    </div>
+
+    <h3>Tax #2: The GIL</h3>
+    <p>The <span class="key">Global Interpreter Lock</span> is a mutex that allows only <strong>one Python instruction to execute at a time</strong>, no matter how many cores your machine has. You can spawn 16 threads on a 16-core CPU and they will take turns, not run in parallel. For CPU-bound Python code, threading gives you zero speedup.</p>
+  </div>
+
+  <div class="gil-vis">
+    <div class="gil-side">
+      <h4>What you'd hope happens</h4>
+      <div class="cores">
+        <div class="core busy">T1</div>
+        <div class="core busy">T2</div>
+        <div class="core busy">T3</div>
+        <div class="core busy">T4</div>
+      </div>
+      <div class="gil-cap">4 threads, 4 cores, 4× speed</div>
+    </div>
+    <div class="gil-side">
+      <h4>What actually happens</h4>
+      <div class="cores">
+        <div class="core busy">T1</div>
+        <div class="core idle">—</div>
+        <div class="core idle">—</div>
+        <div class="core idle">—</div>
+      </div>
+      <div class="gil-cap">GIL: one Python instruction at a time</div>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>The GIL exists for good reasons (it makes the CPython implementation dramatically simpler, especially around reference counting), but it's the reason Python parallelism is hard.</p>
+
+    <h4>How everyone works around the GIL</h4>
+    <p>Four established escape hatches, in increasing order of effort:</p>
+
+    <h3>1. Release the GIL in C code</h3>
+    <p>NumPy, PyTorch, and friends release the GIL before doing heavy work in their C/CUDA kernels. <strong>This is why ML in Python is fast at all.</strong> Your Python interpreter is just dispatching; the actual work runs in compiled code with no lock. <code>torch.matmul(A, B)</code> happily uses all cores and the entire GPU.</p>
+
+    <h3>2. multiprocessing</h3>
+    <p>Spawn separate Python <em>processes</em> instead of threads. Each process has its own GIL, so they really run in parallel. The catch: passing data between processes requires serialization (pickling), which is slow. Good for embarrassingly parallel batches; bad for fine-grained sharing.</p>
+
+    <h3>3. async / await</h3>
+    <p>Doesn't help with CPU work — but excellent for I/O-bound workloads. While one coroutine waits on a network response, others run on the same thread. The GIL doesn't matter because nothing is CPU-busy.</p>
+
+    <h3>4. Drop to C / Cython / Rust</h3>
+    <p>For hot loops that NumPy can't vectorize, write the inner loop in C, Cython, or a Rust extension. Tools like <code>numba</code> JIT-compile a subset of Python to machine code, including releasing the GIL.</p>
+
+    <div class="aside">
+      <strong>Note on Python 3.13+:</strong> there's now an experimental <em>free-threaded</em> build that removes the GIL entirely. It's a multi-year transition, and most C extensions aren't yet thread-safe under it. But the era of the GIL is, slowly, ending.
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 06 -->
+<section id="six">
+  <span class="section-num">§ 06 · Playbook</span>
+  <h1 class="section-title">A performance <em>playbook</em><br>for ML engineers.</h1>
+  <p class="section-lede">Everything above, distilled into actions. Run through these top-down when something is slower than you think it should be.</p>
+
+  <div class="checklist">
+    <div class="check-item">
+      <div class="cnum">01</div>
+      <div>
+        <h4>Profile before you optimize</h4>
+        <p>Never guess. Use <code>cProfile</code>, <code>py-spy</code>, <code>torch.profiler</code>, or <code>nvidia-smi</code>. The bottleneck is rarely where you think — and "obvious" optimizations to non-bottlenecks are wasted effort.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">02</div>
+      <div>
+        <h4>Pick a better algorithm first</h4>
+        <p>O(n²) → O(n log n) beats every hardware trick. A sorted lookup, a hash map, a smarter loss, a sparse representation — these dwarf cache optimizations. Don't micro-optimize a bad algorithm.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">03</div>
+      <div>
+        <h4>Vectorize ruthlessly</h4>
+        <p>Replace Python <code>for</code> loops with NumPy/PyTorch operations. Vectorized code uses SIMD, releases the GIL, and processes contiguous memory. A 100× speedup from this single change is normal.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">04</div>
+      <div>
+        <h4>Keep memory contiguous</h4>
+        <p>Prefer arrays over lists of objects. Use <code>tensor.contiguous()</code> when an op needs it. Avoid creating tiny temporary tensors in a hot loop. Cache locality is invisible but real.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">05</div>
+      <div>
+        <h4>Minimize device transfers</h4>
+        <p>Every <code>.cpu()</code>, <code>.cuda()</code>, <code>.numpy()</code>, or <code>.item()</code> crosses the PCIe bus. In a training loop these add up to dominate everything else. Move data once, keep it on-device.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">06</div>
+      <div>
+        <h4>Batch your work</h4>
+        <p>Bus transfers have fixed overhead per call. One batch of 1024 is dramatically cheaper than 1024 batches of one. This applies to GPU calls, DB queries, network requests, and disk reads alike.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">07</div>
+      <div>
+        <h4>Overlap compute and I/O</h4>
+        <p>While the GPU trains step N, the DataLoader should be preparing step N+1 on CPU workers. PyTorch's <code>num_workers</code>, <code>pin_memory</code>, and <code>prefetch_factor</code> exist for exactly this.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">08</div>
+      <div>
+        <h4>For CPU parallelism, use processes not threads</h4>
+        <p><code>multiprocessing</code>, <code>joblib</code>, or just sharding work across separate Python processes. Threads will not help with CPU-bound Python work because of the GIL.</p>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="cnum">09</div>
+      <div>
+        <h4>Drop down when you have to</h4>
+        <p>For genuinely hot Python loops that can't be vectorized, reach for <code>numba</code>, <code>cython</code>, or a C/Rust extension. These compile to native code and bypass the interpreter entirely.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pullquote">
+    The fastest line of code<br>is the one you didn't write.
+  </div>
+</section>
+
+<footer>
+  <h2>You are now<br>thinking <em>in hardware</em>.</h2>
+  <p>The point of this guide isn't that you'll micro-optimize every line of Python. It's that when something is slow, you now have a mental model of <em>why</em>. Compute or memory? Cache or bus? Sequential or random? GIL or kernel? The questions are small. The answers explain everything.</p>
+  <div class="stamp">
+    <span>End of guide</span>
+    <span>Computer architecture · field notes</span>
+    <span>read again later</span>
+  </div>
+</footer>
+
+</body>
+</html>
