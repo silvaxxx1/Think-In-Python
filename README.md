@@ -1,6 +1,3 @@
-## File 1: `README.md` — Main Repository Root
-
-```markdown
 # Python Mastery Hub
 
 [![Phase 01 Complete](https://img.shields.io/badge/Phase_01-Complete-brightgreen)](./phase_01/)
